@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎱 로또 자동 생성기</title>
+<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@400;700;900&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0a0a1a;--card:#12122a;--gold:#ffd700;--neon:#00e5ff;
+  --pink:#ff4081;--green:#76ff03;--orange:#ff9100;--blue:#448aff;
+  --purple:#b388ff;
+}
+body{
+  font-family:'Noto Sans KR',sans-serif;background:var(--bg);
+  color:#fff;min-height:100vh;overflow-x:hidden;
+  background-image:
+    radial-gradient(ellipse at 20% 50%,rgba(0,229,255,.06) 0%,transparent 50%),
+    radial-gradient(ellipse at 80% 20%,rgba(255,64,129,.06) 0%,transparent 50%);
+}
+.container{max-width:520px;margin:0 auto;padding:24px 16px 40px}
+h1{
+  font-family:'Black Han Sans',sans-serif;font-size:clamp(2rem,8vw,3rem);
+  text-align:center;margin-bottom:4px;
+  background:linear-gradient(135deg,var(--gold),var(--neon));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  letter-spacing:-1px;
+}
+.subtitle{text-align:center;color:#888;font-size:.85rem;margin-bottom:28px}
+.gen-btn{
+  display:block;width:100%;padding:18px;border:none;border-radius:16px;
+  font-family:'Black Han Sans',sans-serif;font-size:1.4rem;cursor:pointer;
+  background:linear-gradient(135deg,var(--pink),var(--orange));color:#fff;
+  box-shadow:0 6px 30px rgba(255,64,129,.35);transition:.2s;letter-spacing:1px;
+  position:relative;overflow:hidden;
+}
+.gen-btn:active{transform:scale(.97)}
+.gen-btn::after{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.15),transparent);
+  transform:translateX(-100%);
+}
+.gen-btn:hover::after{transform:translateX(100%);transition:.6s}
+
+.results{margin-top:24px;display:flex;flex-direction:column;gap:16px}
+.ticket{
+  background:var(--card);border-radius:16px;padding:20px;
+  border:1px solid rgba(255,255,255,.06);
+  animation:slideIn .4s ease-out both;
+  position:relative;overflow:hidden;
+}
+.ticket::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:3px;
+  background:linear-gradient(90deg,var(--neon),var(--pink),var(--gold));
+}
+@keyframes slideIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
+.ticket-head{
+  display:flex;justify-content:space-between;align-items:center;
+  margin-bottom:14px;font-size:.8rem;color:#666;
+}
+.ticket-head .num{
+  font-family:'Black Han Sans',sans-serif;font-size:1rem;color:var(--neon);
+}
+.balls{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.ball{
+  width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-family:'Black Han Sans',sans-serif;font-size:1.25rem;color:#fff;
+  box-shadow:inset 0 -4px 8px rgba(0,0,0,.3),0 4px 12px rgba(0,0,0,.3);
+  animation:pop .35s cubic-bezier(.34,1.56,.64,1) both;
+  position:relative;
+}
+.ball::after{
+  content:'';position:absolute;width:18px;height:8px;background:rgba(255,255,255,.35);
+  border-radius:50%;top:10px;left:50%;transform:translateX(-50%);
+}
+@keyframes pop{from{transform:scale(0) rotate(-180deg)}to{transform:scale(1) rotate(0)}}
+.b1{background:linear-gradient(145deg,#ffd54f,#f9a825)}
+.b10{background:linear-gradient(145deg,#42a5f5,#1565c0)}
+.b20{background:linear-gradient(145deg,#ef5350,#c62828)}
+.b30{background:linear-gradient(145deg,#78909c,#37474f)}
+.b40{background:linear-gradient(145deg,#66bb6a,#2e7d32)}
+
+.controls{
+  display:flex;gap:10px;margin-top:20px;
+}
+.ctrl-btn{
+  flex:1;padding:14px;border:1px solid rgba(255,255,255,.1);border-radius:12px;
+  background:rgba(255,255,255,.04);color:#aaa;font-size:.9rem;cursor:pointer;
+  font-family:'Noto Sans KR',sans-serif;font-weight:700;transition:.2s;
+}
+.ctrl-btn:hover{background:rgba(255,255,255,.1);color:#fff}
+
+.history-section{margin-top:32px}
+.history-section h3{
+  font-family:'Black Han Sans',sans-serif;font-size:1.1rem;color:var(--gold);margin-bottom:12px;
+}
+.history-item{
+  background:rgba(255,255,255,.03);border-radius:10px;padding:10px 14px;
+  margin-bottom:8px;display:flex;align-items:center;gap:8px;font-size:.82rem;
+}
+.history-item .mini-ball{
+  width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:.7rem;font-weight:900;color:#fff;
+}
+
+.qr-section{
+  margin-top:36px;text-align:center;
+  background:var(--card);border-radius:16px;padding:24px;
+  border:1px solid rgba(255,255,255,.06);
+}
+.qr-section h3{
+  font-family:'Black Han Sans',sans-serif;font-size:1rem;color:var(--neon);margin-bottom:6px;
+}
+.qr-section p{color:#666;font-size:.78rem;margin-bottom:16px}
+#qrcode{display:inline-block;padding:12px;background:#fff;border-radius:12px}
+
+.stats{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:20px;
+}
+.stat-card{
+  background:rgba(255,255,255,.03);border-radius:12px;padding:14px 8px;text-align:center;
+}
+.stat-card .val{font-family:'Black Han Sans',sans-serif;font-size:1.4rem;color:var(--gold)}
+.stat-card .lbl{font-size:.7rem;color:#666;margin-top:2px}
+
+.footer{text-align:center;margin-top:40px;color:#444;font-size:.7rem}
+
+@media(max-width:400px){
+  .ball{width:44px;height:44px;font-size:1.05rem}
+  .balls{gap:6px}
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>🎱 로또 생성기</h1>
+  <p class="subtitle">행운의 번호를 자동으로 생성하세요!</p>
+
+  <button class="gen-btn" onclick="generate()">🎰 번호 생성하기</button>
+
+  <div class="controls">
+    <button class="ctrl-btn" onclick="generate5()">5게임 생성</button>
+    <button class="ctrl-btn" onclick="clearAll()">🗑 초기화</button>
+    <button class="ctrl-btn" onclick="copyAll()">📋 복사</button>
+  </div>
+
+  <div class="stats">
+    <div class="stat-card"><div class="val" id="totalGen">0</div><div class="lbl">총 생성</div></div>
+    <div class="stat-card"><div class="val" id="todayGen">0</div><div class="lbl">오늘 생성</div></div>
+    <div class="stat-card"><div class="val" id="luckyScore">—</div><div class="lbl">행운지수</div></div>
+  </div>
+
+  <div class="results" id="results"></div>
+
+  <div class="qr-section">
+    <h3>📱 모바일로 접속하기</h3>
+    <p>QR코드를 스캔하면 스마트폰에서도 사용할 수 있어요</p>
+    <div id="qrcode"></div>
+    <p style="margin-top:10px;color:#555;font-size:.7rem" id="urlDisplay"></p>
+  </div>
+
+  <div class="footer">© 2026 로또 자동 생성기 — 본 서비스는 재미를 위한 것이며 당첨을 보장하지 않습니다.</div>
+</div>
+
+<script>
+let totalCount=0, gameNum=0;
+const results=document.getElementById('results');
+
+function getBallClass(n){
+  if(n<=9)return'b1';if(n<=19)return'b10';if(n<=29)return'b20';if(n<=39)return'b30';return'b40';
+}
+
+function genNumbers(){
+  const nums=new Set();
+  while(nums.size<6) nums.add(Math.floor(Math.random()*45)+1);
+  return [...nums].sort((a,b)=>a-b);
+}
+
+function createTicket(nums,idx){
+  const ticket=document.createElement('div');
+  ticket.className='ticket';
+  ticket.style.animationDelay=idx*0.08+'s';
+  const now=new Date();
+  const time=now.getHours().toString().padStart(2,'0')+':'+now.getMinutes().toString().padStart(2,'0')+':'+now.getSeconds().toString().padStart(2,'0');
+  ticket.innerHTML=`
+    <div class="ticket-head">
+      <span class="num">Game #${gameNum}</span>
+      <span>${time}</span>
+    </div>
+    <div class="balls">
+      ${nums.map((n,i)=>`<div class="ball ${getBallClass(n)}" style="animation-delay:${i*0.07}s">${n}</div>`).join('')}
+    </div>`;
+  return ticket;
+}
+
+function generate(){
+  gameNum++;totalCount++;
+  const nums=genNumbers();
+  const ticket=createTicket(nums,0);
+  results.prepend(ticket);
+  updateStats();
+}
+
+function generate5(){
+  for(let i=0;i<5;i++) setTimeout(()=>generate(),i*120);
+}
+
+function clearAll(){
+  results.innerHTML='';gameNum=0;totalCount=0;updateStats();
+}
+
+function copyAll(){
+  const tickets=[...results.querySelectorAll('.ticket')];
+  if(!tickets.length){alert('생성된 번호가 없습니다!');return}
+  const text=tickets.map(t=>{
+    const head=t.querySelector('.num').textContent;
+    const balls=[...t.querySelectorAll('.ball')].map(b=>b.textContent).join(', ');
+    return head+': '+balls;
+  }).join('\n');
+  navigator.clipboard.writeText(text).then(()=>alert('복사 완료!')).catch(()=>{
+    const ta=document.createElement('textarea');ta.value=text;document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();alert('복사 완료!');
+  });
+}
+
+function updateStats(){
+  document.getElementById('totalGen').textContent=totalCount;
+  document.getElementById('todayGen').textContent=totalCount;
+  document.getElementById('luckyScore').textContent=totalCount?Math.floor(Math.random()*41+60)+'%':'—';
+}
+
+// QR Code
+window.addEventListener('DOMContentLoaded',()=>{
+  const url=window.location.href;
+  document.getElementById('urlDisplay').textContent=url;
+  try{
+    new QRCode(document.getElementById('qrcode'),{
+      text:url,width:160,height:160,
+      colorDark:'#0a0a1a',colorLight:'#ffffff',
+      correctLevel:QRCode.CorrectLevel.M
+    });
+  }catch(e){
+    document.getElementById('qrcode').innerHTML='<p style="color:#888;font-size:.8rem">QR 생성 실패 — 파일을 웹서버에서 열어주세요</p>';
+  }
+});
+</script>
+</body>
+</html>
